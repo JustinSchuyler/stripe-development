@@ -24,9 +24,11 @@ app.post('/payment-intent', (req, res) => {
       currency: 'usd',
       allowed_source_types: ['card_present'],
       capture_method: 'manual',
+      receipt_email: 'x@orthofi.com',
+      description: "We'll give you your $100,000 back if you give us Toothy... NOW!"
   }, function(err, paymentIntent) {
       // asynchronously called
-      if (err) res.json({ err });
+      console.log('error:', err);
       res.json(paymentIntent);
   });
 });
@@ -36,6 +38,7 @@ app.post('/complete-payment', (req, res) => {
 
     stripe.paymentIntents.retrieve(paymentIntentId).then((paymentIntent) => {
       stripe.paymentIntents.capture(paymentIntent.id, (err, response) => {
+        console.log('success');
         res.json({ message: 'Success! Took yo money', paymentIntentId: paymentIntentId });
       });
     });

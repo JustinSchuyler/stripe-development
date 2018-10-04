@@ -72,12 +72,12 @@
                 .then((response) => response.json());
             }
 
-            var configuration = { method: 'simulated' };
+            // var configuration = { method: 'simulated' };
             var terminal = StripeTerminal.create({
                 onFetchConnectionToken: fetchConnectionToken
             });
 
-            terminal.discoverReaders(configuration).then(function(discoverResult) {
+            terminal.discoverReaders().then(function(discoverResult) {
                 if (discoverResult.error) {
                     console.log('Failed to discover: ', discoverResult.error);
                 } else if (discoverResult.discoveredReaders.length === 0) {
