@@ -25,16 +25,18 @@ app.post('/payment-intent', (req, res) => {
     }, function(err, paymentIntent) {
         // asynchronously called
         if (err) res.json({ err });
-        console.log(paymentIntent);
         res.json(paymentIntent);
     });
 });
 
 app.post('/complete-payment', (req, res) => {
     const paymentIntentId = req.body.paymentIntentId;
-    const paymentIntent = stripe.payment_intent.retrieve(paymentIntentId);
-    paymentIntent.capture();
-    res.json({ message: 'Success! Took yo money' });
+
+    stripe.paymentIntents.retrieve(paymentIntentId).then((paymentIntent) => {
+      stripe.paymentIntents.capture(paymentIntent.id, (err, response) => {
+        res.json({ message: 'Success! Took yo money', paymentIntentId: paymentIntentId });
+      });
+    });
 });
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

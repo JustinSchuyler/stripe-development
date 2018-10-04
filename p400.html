@@ -16,17 +16,13 @@
             background-color: #66baf6;
         }
         </style>
+        <!-- <script src="https://js.stripe.com/terminal/v1/sdk-0-9-9.js"></script> -->
         <script src="https://js.stripe.com/terminal/v1/sdk-b1.js"></script>
         <script>
             function fetchConnectionToken() {
-                return fetch('http://localhost:3000/connection-token', {
-                    method: 'POST',
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log(data);
-                    return data.secret;
-                });
+                return fetch('http://localhost:3000/connection-token', { method: 'POST' })
+                        .then((response) => response.json())
+                        .then((data) => data.secret);
             }
 
             function connectReader(discoverResult) {
@@ -43,20 +39,13 @@
             }
 
             function fetchPaymentIntent() {
-                return fetch('http://localhost:3000/payment-intent', {
-                    method: 'POST',
-                })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log(data);
-                    return data.client_secret;
-                });
+                return fetch('http://localhost:3000/payment-intent', { method: 'POST' })
+                        .then((response) => response.json())
+                        .then((data) => data.client_secret);
             }
 
             function confirmPaymentIntent(paymentIntent) {
                 return terminal.confirmPaymentIntent(paymentIntent).then(function(confirmResult) {
-                    console.log(confirmResult);
-
                     if (confirmResult.error) {
                         console.log("Confirm failed: " + confirmResult.error.message);
                     } else if (confirmResult.paymentIntent) {
@@ -69,21 +58,20 @@
             function completePayment(paymentIntentId) {
                 return fetch('http://localhost:3000/complete-payment', {
                     method: 'POST',
-                    body: JSON.stringify({ paymentIntentId })
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify({ paymentIntentId: paymentIntentId })
                 })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log(data);
-                    return data;
-                });
+                .then((response) => response.json());
             }
 
-            // var configuration = { method: 'simulated' };
+            var configuration = { method: 'simulated' };
             var terminal = StripeTerminal.create({
                 onFetchConnectionToken: fetchConnectionToken
             });
 
-            terminal.discoverReaders().then(function(discoverResult) {
+            terminal.discoverReaders(configuration).then(function(discoverResult) {
                 if (discoverResult.error) {
                     console.log('Failed to discover: ', discoverResult.error);
                 } else if (discoverResult.discoveredReaders.length === 0) {
@@ -97,11 +85,8 @@
             });
 
             window.onload = function() {
-                console.log('ready');
                 document.getElementById('create-payment-intent').addEventListener('click', () => {
                     fetchPaymentIntent().then((clientSecret) => {
-                        console.log('client secret', clientSecret);
-
                         terminal.collectPaymentMethod(clientSecret).then(function(result) {
                             if (result.error) {
                                 console.log("Collect payment method failed: " + result.error.message);
