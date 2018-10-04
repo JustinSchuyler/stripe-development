@@ -17,16 +17,18 @@ app.post('/connection-token', (req, res) => {
 });
 
 app.post('/payment-intent', (req, res) => {
-    stripe.paymentIntents.create({
-        amount: 100,
-        currency: 'usd',
-        allowed_source_types: ['card_present'],
-        capture_method: 'manual',
-    }, function(err, paymentIntent) {
-        // asynchronously called
-        if (err) res.json({ err });
-        res.json(paymentIntent);
-    });
+  const amount = req.body.amount * 100;
+
+  stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      allowed_source_types: ['card_present'],
+      capture_method: 'manual',
+  }, function(err, paymentIntent) {
+      // asynchronously called
+      if (err) res.json({ err });
+      res.json(paymentIntent);
+  });
 });
 
 app.post('/complete-payment', (req, res) => {

@@ -39,9 +39,15 @@
             }
 
             function fetchPaymentIntent() {
-                return fetch('http://localhost:3000/payment-intent', { method: 'POST' })
-                        .then((response) => response.json())
-                        .then((data) => data.client_secret);
+                return fetch('http://localhost:3000/payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify({ amount: +document.getElementById('amount').value })
+                })
+                .then((response) => response.json())
+                .then((data) => data.client_secret);
             }
 
             function confirmPaymentIntent(paymentIntent) {
@@ -103,6 +109,8 @@
         </script>
     </head>
     <body>
+        <label>Amount</label>
+        <input id="amount" type="text">
         <button id="create-payment-intent" type="button">Create Payment Intent</button>
     </body>
 </html>
