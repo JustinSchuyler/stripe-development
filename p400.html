@@ -3,6 +3,19 @@
     <head>
         <meta charset="utf-8">
         <title>P400</title>
+        <style>
+        button#create-payment-intent {
+            background-color: #bce0ff;
+            border: 2px solid #4ea4ec;
+            box-shadow: 0 0 5px #cacaca;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button#create-payment-intent:hover {
+            background-color: #66baf6;
+        }
+        </style>
         <script src="https://js.stripe.com/terminal/v1/sdk-b1.js"></script>
         <script>
             function fetchConnectionToken() {
@@ -22,13 +35,50 @@
 
                 terminal.connectReader(selectedReader).then(function(connectResult) {
                     if (connectResult.error) {
-                    console.log('Failed to connect: ', connectResult.error);
+                        console.log('Failed to connect: ', connectResult.error);
                     } else {
-                    console.log('Connected to reader: ', connectResult.connection.reader.label);
+                        console.log('Connected to reader: ', connectResult.connection.reader.label);
                     }
                 });
             }
 
+            function fetchPaymentIntent() {
+                return fetch('http://localhost:3000/payment-intent', {
+                    method: 'POST',
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log(data);
+                    return data.client_secret;
+                });
+            }
+
+            function confirmPaymentIntent(paymentIntent) {
+                return terminal.confirmPaymentIntent(paymentIntent).then(function(confirmResult) {
+                    console.log(confirmResult);
+
+                    if (confirmResult.error) {
+                        console.log("Confirm failed: " + confirmResult.error.message);
+                    } else if (confirmResult.paymentIntent) {
+                        // Notify your backend to capture the PaymentIntent
+                        completePayment(paymentIntent.id);
+                    }
+                });
+            }
+
+            function completePayment(paymentIntentId) {
+                return fetch('http://localhost:3000/complete-payment', {
+                    method: 'POST',
+                    body: JSON.stringify({ paymentIntentId })
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log(data);
+                    return data;
+                });
+            }
+
+            // var configuration = { method: 'simulated' };
             var terminal = StripeTerminal.create({
                 onFetchConnectionToken: fetchConnectionToken
             });
@@ -41,12 +91,33 @@
                 } else {
                     // You should show the list of discoveredReaders to the
                     // cashier here and let them select which to connect to (see below).
+                    console.log('Connect to reader:', discoverResult);
                     connectReader(discoverResult);
                 }
             });
+
+            window.onload = function() {
+                console.log('ready');
+                document.getElementById('create-payment-intent').addEventListener('click', () => {
+                    fetchPaymentIntent().then((clientSecret) => {
+                        console.log('client secret', clientSecret);
+
+                        terminal.collectPaymentMethod(clientSecret).then(function(result) {
+                            if (result.error) {
+                                console.log("Collect payment method failed: " + result.error.message);
+                            }
+                            else {
+                                console.log("Payment method: ", result.paymentIntent.payment_method)
+                                // Confirm PaymentIntent (see below)
+                                confirmPaymentIntent(result.paymentIntent)
+                            }
+                        });
+                    });
+                });
+            }
         </script>
     </head>
     <body>
-
+        <button id="create-payment-intent" type="button">Create Payment Intent</button>
     </body>
 </html>
