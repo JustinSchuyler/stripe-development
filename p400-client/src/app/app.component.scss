@@ -169,7 +169,7 @@ header {
         padding: 30px 0;
         
         span {
-            font-size: .8rem;
+            font-size: 1rem;
         }
         h2 {
             font-size: 2.4rem;
@@ -179,7 +179,7 @@ header {
     h3 {
         text-align: center;
         margin-bottom: 40px;
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: normal;
     }
     #pay-methods {
@@ -208,7 +208,6 @@ header {
     }
     .tile {
         padding: 10px;
-        text-align: center;
         border-radius: 5px;
         border: 2px solid #ddd;
         background-color: #f8f8f8;
@@ -228,6 +227,30 @@ header {
 
         a {
             color: cornflowerblue;
+        }
+    }
+    .new-source {
+        width: 300px;
+        margin-bottom: 15px;
+
+        .new-source-header {
+            font-weight: bold;
+        }
+        div {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+
+            img {
+                margin-right: 10px;
+            }
+            .last4 {
+                margin-right: 15px;
+            }
+        }
+        .default {
+            color: #888;
+            font-size: .8rem;
         }
     }
 }
@@ -255,5 +278,15 @@ header {
         font-size: 1rem;
         color: #888;
         font-style: italic;
+    }
+}
+#legacy {
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    height: 100vh;
+    
+    img {
+        width: 100%;
     }
 }

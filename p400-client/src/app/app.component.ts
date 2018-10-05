@@ -12,7 +12,7 @@ export class AppComponent implements OnInit {
   additionalItems = additionalItems;
   loading: boolean = false;
   downpayment: number = 825;
-  page: string = 'cart';
+  page: string = 'legacy';
   confirmResult;
   customerId: string = 'cus_Dj5vY3ceud6iJL';
   newSource;
@@ -189,7 +189,15 @@ saveCard() {
       console.log('charged with existing card:', data);
       this.page = 'confirmation';
       this.state = 'done';
+      this.loading = false;
     });
     }
+  }
+
+  resetCart() {
+    this.confirmResult = null;
+    this.additionalItems.map(x => x.selected = false);
+    this.downpayment = 0;
+    this.page = 'cart';
   }
 }

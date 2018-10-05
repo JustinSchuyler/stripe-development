@@ -5,6 +5,10 @@ const request = require('request');
 const app = express();
 const port = 3000;
 const stripe = require("stripe")("sk_test_2HkYzFImOSrI76MneAxB5ccs");
+const targetCustomer = {
+  id: 'cus_Dj5vY3ceud6iJL',
+  email: 'josh.rocha@orthofi.com'
+}
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -25,10 +29,10 @@ app.post('/payment-intent', (req, res) => {
       currency: 'usd',
       allowed_source_types: ['card_present'],
       capture_method: 'manual',
-      receipt_email: 'x@orthofi.com',
-      description: "We'll give you your $100,000 back if you give us Toothy... NOW!",
+      receipt_email: targetCustomer.email,
+      description: "Thank you for your purchase with Always Smiling!",
       // save_source_to_customer: true,
-      // customer: 'cus_Dj5vY3ceud6iJL'
+      customer: targetCustomer.id
   }, function(err, paymentIntent) {
       // asynchronously called
       console.log('error:', err);
@@ -50,7 +54,7 @@ app.post('/complete-payment', (req, res) => {
 app.post('/customer', async (req, res) => {
   const customer = await stripe.customers.create({
     source: 'tok_mastercard',
-    email: 'josh.rocha@orthofi.com'
+    email: targetCustomer.email
   });
 
   res.json({ customer: customer });
@@ -63,13 +67,15 @@ app.get('/customer/:id', async (req, res) => {
 
 app.post('/charge', async (req, res) => {
   console.log('charge this:', req.body);
-  const amount = req.body.amount;
+  const amount = req.body.amount * 100;
   const customerId = req.body.customerId;
   const sourceId = req.body.sourceId;
 
   const charge = await stripe.charges.create({
     amount: amount,
     currency: 'usd',
+    receipt_email: targetCustomer.email,
+    description: "Thank you for your purchase with Always Smiling!",
     customer: customerId,//'cus_Dj5vY3ceud6iJL',
     source: sourceId//'src_1DHeX6FQHroPf6w9Pk3h4XnV'
   });
@@ -86,10 +92,12 @@ app.get('/source/:id', async (req, res) => {
   res.json(source);
 })
 
-app.post('/detach-source', async (req, res) => {
+app.post('/detach-source/:sourceId', async (req, res) => {
+  console.log(`Detach ${req.params.sourceId} from ${targetCustomer.id}`);
   const source = await stripe.customers.deleteSource(
-    'cus_Dj5vY3ceud6iJL',
-    'src_1DHvnQFQHroPf6w9HdJrq9ej'
+    targetCustomer.id,
+    req.params.sourceId
+    // 'src_1DHvnQFQHroPf6w9HdJrq9ej'
     // 'src_1DHtvjFQHroPf6w9Rnn670Nj'
     // 'src_1DHjkfFQHroPf6w9ClHoD2lw'
     // sourceId

@@ -27,14 +27,14 @@
                     Payment Summary
                 </span>
             </h3>
-            <hr>
+            <hr *ngIf="downpayment">
             <div *ngIf="downpayment" id="downpayment" class="row">
                 <div class="row-header">
                     <b>Treatment Down Payment</b>
                     <b>{{downpayment | currency}}</b>
                 </div>
                 <div class="row-body">
-                    <span>Invisalign</span>
+                    <span>Clear Braces</span>
                 </div>
             </div>
             <div *ngFor="let item of getSelectedItems()" class="row">
@@ -96,16 +96,16 @@
             <h3>Select Payment Method</h3>
             <div id="methods">
                 <div class="method tile" (click)="payWithStripe(getCartTotal() + downpayment)">
-                    <i class="fab fa-stripe"></i>
+                    <img src="assets/Stripe Logo.png">
                 </div>
                 <div class="method tile">
-                    <i class="fas fa-money-bill"></i>
+                    <img src="assets/Cash.png">
                 </div>
                 <div class="method tile">
-                    <i class="fas fa-money-check"></i>
+                        <img src="assets/Check.png">
                 </div>
                 <div class="method tile">
-                    <i class="fas fa-credit-card"></i>
+                        <img src="assets/Credit.png">
                 </div>
             </div>
         </div>
@@ -118,11 +118,11 @@
             <div *ngIf="newSource" class="new-source tile" (click)="payWithStripe(getCartTotal() + downpayment)">
                 <span class="new-source-header">Dave's Visa</span>
                 <div>
-                    <i class="fas fa-credit-card"></i>
-                    <span>{{newSource.card.last4}}</span>
+                    <img src="assets/visa card.png">
+                    <span class="last4">{{newSource.card.last4}}</span>
                     <span>EXP. {{newSource.card.exp_month}}/{{newSource.card.exp_year}}</span>
                 </div>
-                <span>DEFAULT</span>
+                <span class="default">DEFAULT</span>
             </div>
         </div>
     </div>
@@ -133,10 +133,13 @@
     <span>Your card ending in {{confirmResult.paymentIntent.source.card_present.last4}} was charged {{getCartTotal() + downpayment | currency}}.</span>
     <div *ngIf="state != 'done'" id="save-payment-method">
         <h2>Would you like to keep this card on file?</h2>
-        <button mat-stroked-button type="button" color="primary">Don't Save Card</button>
+        <button mat-stroked-button type="button" color="primary" (click)="resetCart()">Don't Save Card</button>
         <button mat-raised-button type="button" color="primary" (click)="saveCard()">Save Card</button>
     </div>
 </div>
 <div id="loading-modal" *ngIf="loading">
     <img src="assets/toothy.jpg">
+</div>
+<div *ngIf="page == 'legacy'" id="legacy" (click)="page = 'cart'">
+    <img src="assets/legacy.png">
 </div>
