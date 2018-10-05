@@ -52,6 +52,7 @@
 
             function confirmPaymentIntent(paymentIntent) {
                 return terminal.confirmPaymentIntent(paymentIntent).then(function(confirmResult) {
+                    console.log('confirm result:', confirmResult);
                     if (confirmResult.error) {
                         console.log("Confirm failed: " + confirmResult.error.message);
                     } else if (confirmResult.paymentIntent) {
@@ -94,6 +95,7 @@
                 document.getElementById('create-payment-intent').addEventListener('click', () => {
                     fetchPaymentIntent().then((clientSecret) => {
                         terminal.collectPaymentMethod(clientSecret).then(function(result) {
+                            console.log('result:', result);
                             if (result.error) {
                                 console.log("Collect payment method failed: " + result.error.message);
                             }
@@ -105,6 +107,22 @@
                         });
                     });
                 });
+
+                fetch('http://localhost:3000/customer/cus_Dj5vY3ceud6iJL')
+                    .then((response) => response.json())
+                    .then((customer) => {
+                        console.log(customer);
+                        let cards = document.querySelector('#cards');
+                        cards.addEventListener('click', (e) => {
+                            console.log(e);
+                        });
+                        for (let source of customer.sources.data) {
+                            let card = document.createElement('li');
+                            card.id = source.id;
+                            card.innerHTML = source.card.last4;
+                            cards.appendChild(card);
+                        }
+                    });
             }
         </script>
     </head>
@@ -112,5 +130,6 @@
         <label>Amount</label>
         <input id="amount" type="text">
         <button id="create-payment-intent" type="button">Create Payment Intent</button>
+        <ul id="cards"></ul>
     </body>
 </html>

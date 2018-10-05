@@ -1,0 +1,5 @@
+<mat-form-field>
+    <input matInput placeholder="Amount" #amount autocomplete="off">
+</mat-form-field>
+<button mat-button color="primary" type="button" (click)="charge(+amount.value, saveCard.checked)">Charge</button>
+<mat-slide-toggle #saveCard>Save Card?</mat-slide-toggle>
