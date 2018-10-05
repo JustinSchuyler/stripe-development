@@ -1,13 +1,22 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { additionalItems } from './additionalItems';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   terminal: any;
+  additionalItems = additionalItems;
+  loading: boolean = false;
+  downpayment: number = 825;
+  page: string = 'cart';
+  confirmResult;
+  customerId: string = 'cus_Dj5vY3ceud6iJL';
+  newSource;
+  state;
 
   constructor(private http: HttpClient) { }
 
@@ -15,8 +24,24 @@ export class AppComponent implements OnInit {
     this.terminal = (<any>window).StripeTerminal.create({
       onFetchConnectionToken: this.fetchConnectionToken
     });
-    var configuration = {method: 'simulated'}
-    this.terminal.discoverReaders(configuration).then(this.handleDiscovery.bind(this));
+    // var configuration = {method: 'simulated'}
+    this.terminal.discoverReaders().then(this.handleDiscovery.bind(this));
+  }
+
+  payWithStripe(amount: number) {
+    this.loading = true;
+    this.charge(amount);
+  }
+
+  getSelectedItems() {
+    return this.additionalItems.filter(x => x.selected);
+  }
+
+  getCartTotal(): number {
+    return additionalItems
+            .filter(x => x.selected)
+            .map(x => x.cost)
+            .reduce((a, c) => a + c, 0);
   }
 
   fetchConnectionToken() {
@@ -67,7 +92,7 @@ export class AppComponent implements OnInit {
     console.log('confirm result:', confirmResult);
     const paymentSourceId = confirmResult.paymentIntent.source.id;
     console.log('paymentSourceId', paymentSourceId);
-
+    this.confirmResult = confirmResult;
 
     if (confirmResult.error) {
         console.log("Confirm failed: " + confirmResult.error.message);
@@ -75,33 +100,40 @@ export class AppComponent implements OnInit {
         // Notify your backend to capture the PaymentIntent
         this.completePayment(confirmResult.paymentIntent.id)
         .then(() => {
-          fetch('http://localhost:3000/attach-source', {
-              method: 'POST',
-              headers: {
-                  "Content-Type": "application/json; charset=utf-8"
-              },
-              body: JSON.stringify({ paymentSourceId, customerId: 'cus_Dj5vY3ceud6iJL' })
-          })
-          .then((response) => response.json())
-          .then((data) => console.log(data));
-
-          // fetch('https://api.stripe.com/v1/sources', {
+          this.loading = false;
+          this.page = 'confirmation';
+        });
+        // .then(() => {
+          // Store the paymentSourceId so it can be converted + attached at a later step pending user approval
+          // fetch('http://localhost:3000/attach-source', {
           //     method: 'POST',
           //     headers: {
-          //         "Content-Type": "application/json; charset=utf-8",
-          //         "Authorization": 'Basic ' + btoa('sk_test_2HkYzFImOSrI76MneAxB5ccs:')
+          //         "Content-Type": "application/json; charset=utf-8"
           //     },
-          //     body: JSON.stringify({
-          //       type: 'card',
-          //       "card[card_present_source]": paymentSourceId
-          //     })
+          //     body: JSON.stringify({ paymentSourceId, customerId: 'cus_Dj5vY3ceud6iJL' })
           // })
           // .then((response) => response.json())
-          // .then((data) => {
-          //   console.log(data);
-          // });
-        });
+          // .then((data) => console.log(data));
+        // });
     }
+}
+
+saveCard() {
+  return fetch('http://localhost:3000/attach-source', {
+          method: 'POST',
+          headers: {
+              "Content-Type": "application/json; charset=utf-8"
+          },
+          body: JSON.stringify({ paymentSourceId: this.confirmResult.paymentIntent.source.id, customerId: this.customerId })
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('new source:', data);
+        this.newSource = data;
+        this.additionalItems.map(x => x.selected = false);
+        this.downpayment = 0;
+        this.page = 'cart';
+      });
 }
 
   confirmPaymentIntent(paymentIntent) {
@@ -135,7 +167,29 @@ export class AppComponent implements OnInit {
     this.terminal.collectPaymentMethod(clientSecret).then(this.handlePaymentMethod.bind(this));
   }
 
-  charge(amount: number, saveCard: boolean) {
-    this.fetchPaymentIntent(amount).then(this.handlePaymentIntent.bind(this));
+  charge(amount: number) {
+    if (!this.newSource) {
+      this.fetchPaymentIntent(amount).then(this.handlePaymentIntent.bind(this));
+    }
+    else {
+      console.log('pay with:', this.newSource);
+      return fetch('http://localhost:3000/charge', {
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json; charset=utf-8"
+        },
+        body: JSON.stringify({
+          amount: amount,
+          customerId: this.customerId,
+          sourceId: this.newSource.id
+        })
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log('charged with existing card:', data);
+      this.page = 'confirmation';
+      this.state = 'done';
+    });
+    }
   }
 }

@@ -1,5 +1,142 @@
-<mat-form-field>
+<!-- <mat-form-field>
     <input matInput placeholder="Amount" #amount autocomplete="off">
 </mat-form-field>
-<button mat-button color="primary" type="button" (click)="charge(+amount.value, saveCard.checked)">Charge</button>
-<mat-slide-toggle #saveCard>Save Card?</mat-slide-toggle>
+<button mat-raised-button color="primary" type="button" (click)="charge(+amount.value, saveCard.checked)">Charge</button>
+<mat-slide-toggle #saveCard>Save Card?</mat-slide-toggle> -->
+<!-- <img src="assets/toothy.jpg"> -->
+<header>
+    <button mat-icon-button>
+        <mat-icon>menu</mat-icon>
+    </button>
+    <div id="account-controls">
+        <img src="assets/toothy.jpg">
+        <span>Dave Ternan</span>
+        <button mat-icon-button>
+            <mat-icon>more_vert</mat-icon>
+        </button>
+    </div>
+</header>
+<div id="columns" *ngIf="page == 'cart' || page == 'pay'">
+    <div id="cart">
+        <div>
+            <h3>
+                <span *ngIf="page == 'cart'">
+                    Cart ({{getSelectedItems().length}})
+                </span>
+                <span *ngIf="page == 'pay'">
+                    Payment Summary
+                </span>
+            </h3>
+            <hr>
+            <div *ngIf="downpayment" id="downpayment" class="row">
+                <div class="row-header">
+                    <b>Treatment Down Payment</b>
+                    <b>{{downpayment | currency}}</b>
+                </div>
+                <div class="row-body">
+                    <span>Invisalign</span>
+                </div>
+            </div>
+            <div *ngFor="let item of getSelectedItems()" class="row">
+                    <div class="row-header">
+                        <b>{{item.name}}</b>
+                        <b>{{item.cost | currency}}</b>
+                    </div>
+                    <div class="row-body">
+                        <span>{{item.description}}</span>
+                        <span>QTY. 1</span>
+                        <span>{{item.cost | currency}}</span>
+                    </div>
+            </div>
+            <div id="summary">
+                <div class="row">
+                    <span>Subtotal</span>
+                    <b>{{getCartTotal() + downpayment | currency}}</b>
+                </div>
+                <div class="row discount">
+                    <span>Discount</span>
+                    <b>($0.00)</b>
+                </div>
+                <div class="row">
+                    <span>Tax - 0%</span>
+                    <b>$0.00</b>
+                </div>
+            </div>
+            <div id="total" class="row">
+                <span>Total</span>
+                <b>{{getCartTotal() + downpayment | currency}}</b>
+            </div>
+        </div>
+        <button *ngIf="page == 'cart'" mat-raised-button id="checkout" type="button" (click)="page = 'pay'">Checkout</button>
+        <button *ngIf="page == 'pay'" mat-stroked-button color="primary" type="button" (click)="page = 'cart'">Return to Cart</button>
+    </div>
+    <div *ngIf="page == 'cart'" id="shop">
+        <h2>Additional Items</h2>
+        <mat-form-field>
+            <mat-select placeholder="Product Type" [value]="'all'">
+                <mat-option value="all">All Products</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <ul class="items">
+            <li *ngFor="let item of additionalItems" class="item" (click)="item.selected = !item.selected" [class.selected]="item.selected">
+                <div>
+                    <h4 class="name">{{item.name}}</h4>
+                    <span class="description">{{item.description}}</span>
+                </div>
+                <div class="cost">{{item.cost | currency}}</div>
+            </li>
+        </ul>
+    </div>
+    <div *ngIf="page == 'pay'" id="pay">
+        <div id="pay-header">
+            <span>Total</span>
+            <h2>{{getCartTotal() + downpayment | currency}}</h2>
+        </div>
+        <div id="pay-methods">
+            <h3>Select Payment Method</h3>
+            <div id="methods">
+                <div class="method tile" (click)="payWithStripe(getCartTotal() + downpayment)">
+                    <i class="fab fa-stripe"></i>
+                </div>
+                <div class="method tile">
+                    <i class="fas fa-money-bill"></i>
+                </div>
+                <div class="method tile">
+                    <i class="fas fa-money-check"></i>
+                </div>
+                <div class="method tile">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+            </div>
+        </div>
+        <div id="pay-saved">
+            <h3>Saved Payment Methods</h3>
+            <div *ngIf="!newSource" class="none-saved tile">
+                <span>No saved payment methods on file.</span>
+                <div><a>Add Payment Method</a></div>
+            </div>
+            <div *ngIf="newSource" class="new-source tile" (click)="payWithStripe(getCartTotal() + downpayment)">
+                <span class="new-source-header">Dave's Visa</span>
+                <div>
+                    <i class="fas fa-credit-card"></i>
+                    <span>{{newSource.card.last4}}</span>
+                    <span>EXP. {{newSource.card.exp_month}}/{{newSource.card.exp_year}}</span>
+                </div>
+                <span>DEFAULT</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div *ngIf="page == 'confirmation'" id="confirmation">
+    <mat-icon>check_circle</mat-icon>
+    <h1>Payment Successful</h1>
+    <span>Your card ending in {{confirmResult.paymentIntent.source.card_present.last4}} was charged {{getCartTotal() + downpayment | currency}}.</span>
+    <div *ngIf="state != 'done'" id="save-payment-method">
+        <h2>Would you like to keep this card on file?</h2>
+        <button mat-stroked-button type="button" color="primary">Don't Save Card</button>
+        <button mat-raised-button type="button" color="primary" (click)="saveCard()">Save Card</button>
+    </div>
+</div>
+<div id="loading-modal" *ngIf="loading">
+    <img src="assets/toothy.jpg">
+</div>

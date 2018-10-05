@@ -61,12 +61,17 @@ app.get('/customer/:id', async (req, res) => {
   res.json(customer);
 });
 
-app.post('/charge-josh', async (req, res) => {
+app.post('/charge', async (req, res) => {
+  console.log('charge this:', req.body);
+  const amount = req.body.amount;
+  const customerId = req.body.customerId;
+  const sourceId = req.body.sourceId;
+
   const charge = await stripe.charges.create({
-    amount: 400,
+    amount: amount,
     currency: 'usd',
-    customer: 'cus_Dj5vY3ceud6iJL',
-    source: 'src_1DHeX6FQHroPf6w9Pk3h4XnV'
+    customer: customerId,//'cus_Dj5vY3ceud6iJL',
+    source: sourceId//'src_1DHeX6FQHroPf6w9Pk3h4XnV'
   });
   res.json(charge);
 });
@@ -81,10 +86,13 @@ app.get('/source/:id', async (req, res) => {
   res.json(source);
 })
 
-app.post('/detach-source/:sourceId', async (req, res) => {
+app.post('/detach-source', async (req, res) => {
   const source = await stripe.customers.deleteSource(
     'cus_Dj5vY3ceud6iJL',
-    sourceId
+    'src_1DHvnQFQHroPf6w9HdJrq9ej'
+    // 'src_1DHtvjFQHroPf6w9Rnn670Nj'
+    // 'src_1DHjkfFQHroPf6w9ClHoD2lw'
+    // sourceId
     // 'src_1DHeX6FQHroPf6w9Pk3h4XnV'
   );
   res.json(source);
